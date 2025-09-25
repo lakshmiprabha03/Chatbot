@@ -13,9 +13,10 @@ const PORT = process.env.PORT || 5000;
 
 // CORS: Allow frontend origin from .env
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'https://chatbot-gules-psi.vercel.app/'],
   credentials: true
 }));
+
 
 // JSON & URL-encoded parsers
 app.use(express.json({ limit: '10mb' }));
