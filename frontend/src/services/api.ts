@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-// Base axios instance
+// Dynamic base URL: Env var for prod (Vercel), fallback to localhost for dev
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+// Base axios instance (updated baseURL)
 const api = axios.create({
-  baseURL: 'http://localhost:5000',  // Backend URL
+  baseURL: API_BASE,  // Now dynamic: e.g., Prod: https://backend.onrender.com
   headers: {
     'Content-Type': 'application/json',
   },
@@ -17,9 +20,10 @@ export const setAuthToken = (token: string | null) => {
   }
 };
 
-// Request interceptor: Auto-add token from localStorage to EVERY request
+// Single Request Interceptor: Auto-add token from localStorage to EVERY request (merged duplicates, added debug)
 api.interceptors.request.use(
   (config) => {
+    console.log('🔥 DEBUG: Interceptor - Request config:', config.method, config.url);  // Your debug log
     let token = localStorage.getItem('token');
     // FIXED: Safe type check for auth header (handles union type)
     const authHeader = api.defaults.headers.common['Authorization'];
@@ -34,19 +38,6 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
-
-api.interceptors.request.use(
-  (config) => {
-    console.log('🔥 DEBUG: Interceptor - Request config:', config.method, config.url);  // FIXED: Extra trace
-    let token = localStorage.getItem('token');
-    // ... rest unchanged
-    console.log(`🔑 API Request: ${config.method?.toUpperCase()} ${config.url} | Token: ${!!token ? '✅ Present' : '❌ Missing'}`);
-    return config;
-  },
-  // ...
-);
-
-
 
 // Response interceptor: Handle 401 globally (auto-logout)
 api.interceptors.response.use(
@@ -85,4 +76,3 @@ export const chatAPI = {
 export const messagesAPI = chatAPI;
 
 export default api;
-
