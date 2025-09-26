@@ -6,8 +6,8 @@ import api from '../services/api';  // For logout
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;  // Return type for better handling
-  register: (username: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<void>;  // Reverted to void (no TS mismatch)
+  register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -21,7 +21,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser ] = useState<User | null>(null);  // FIXED: No space in setUser 
+  const [user, setUser ] = useState<User | null>(null);  // FIXED: No space
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
@@ -48,8 +48,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('token', newToken);
         setAuthToken(newToken);
         console.log('🔥 DEBUG: AuthContext - Login complete - states & storage updated');
-        
-        return { success: true };
       } else {
         console.log('🔥 DEBUG: AuthContext - API response not successful:', res.data);
         throw new Error(res.data?.error || 'Login failed - no success flag');
@@ -59,7 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('🔥 DEBUG: AuthContext - Error message:', err.message);
       console.error('🔥 DEBUG: AuthContext - Error response:', err.response?.data);
       console.error('🔥 DEBUG: AuthContext - Full error:', err);
-      return { success: false, error: err.message || 'Network Error' };
+      throw err;  // Re-throw for Login.tsx to handle (e.g., alert)
     }
   };
 
@@ -67,18 +65,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const res = await authAPI.register({ username, email, password });
       if (res.data.success) {
-        const { token: newToken, user: backendUser  } = res.data.data!;  // FIXED: No extra spaces
+        const { token: newToken, user: backendUser  } = res.data.data!;
         setToken(newToken);
         setUser (backendUser  || { _id: 'temp', username, email });
         localStorage.setItem('token', newToken);
         setAuthToken(newToken);
-        return { success: true };
       } else {
         throw new Error(res.data.error || 'Register failed');
       }
     } catch (err: any) {
       console.error('Register error:', err.response?.data?.error || err.message);
-      return { success: false, error: err.message || 'Register failed' };
+      throw err;
     }
   };
 

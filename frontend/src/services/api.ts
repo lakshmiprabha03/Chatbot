@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // Dynamic base URL: Env var for prod (Vercel), fallback to localhost for dev
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// CRA uses process.env.REACT_APP_*, Vite uses import.meta.env.VITE_*
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // Base axios instance (updated baseURL)
 const api = axios.create({
